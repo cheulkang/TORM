@@ -1,0 +1,5 @@
+<launch>
+    <group ns="torm">
+        <rosparam file="$(find torm)/src/data/problem/fetch_hello.yaml" />
+    </group>
+</launch>

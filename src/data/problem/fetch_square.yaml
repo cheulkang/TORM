@@ -1,0 +1,12 @@
+fixed_frame: "/base_link"
+planning_group: "arm"
+planning_base_link: "torso_lift_link"
+planning_tip_link: "gripper_link"
+scene_name: "square"
+start_config: [0.0272933, -0.0157441, 0.075843, -0.858345, 3.1045, -0.872314, 3.0895853]
+# x, y, z, roll, pitch, yaw
+start_pose: [1.1, 0.0, 0.66, 0.0, 0.0, 0.0]
+# name, x, y, z, roll, pitch, yaw, size_x, size_y, size_z
+obstacles: [[x: 0.75, y: 0.0, z: 0.36, roll: 0.0, pitch: 0.0, yaw: 0.0, size_x: 0.70, size_y: 1.40, size_z: 0.72]]
+default_setting_joints: []
+default_setting_values: []
