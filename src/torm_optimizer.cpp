@@ -111,9 +111,6 @@ namespace torm
             }
         }
 
-        for(int i = 0; i < num_joints_; i++){
-            variance_.push_back(parameters_->gaussian_weight_ * vel_limit_[i]);
-        }
         unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
         generator_.seed(seed);
 
@@ -417,7 +414,7 @@ namespace torm
             double f = (double)rand() / RAND_MAX;
             parameters_->obstacle_cost_weight_ = min_v + f * (max_v - min_v);
             getNewTrajectory();
-            localOptimizeTSGD(parameters_->quantum_iter_);
+            localOptimizeTSGD(parameters_->exploration_iter_);
         }
 
         group_trajectory_.getTrajectory() = best_trajectory_;
@@ -506,17 +503,6 @@ namespace torm
         full_trajectory_->updateFromGroupTrajectory(group_trajectory_);
     }
 
-    KDL::JntArray TormOptimizer::fGaussian(KDL::JntArray q)
-    {
-        KDL::JntArray q_t(num_joints_);
-        for(uint j = 0; j < num_joints_; j++){
-            std::normal_distribution<double> distribution(q(j), variance_[j]);
-            q_t(j) = distribution(generator_);
-        }
-
-        return q_t;
-    }
-
     void TormOptimizer::fillInLinearInterpolation(int start, int goal)
     {
         Eigen::VectorXd st = group_trajectory_.getTrajectoryPoint(start);
@@ -570,12 +556,7 @@ namespace torm
             double bestCost = 10000000000.0;
             std::vector<KDL::JntArray> random_confs;
 
-            for (uint j = 0; j < 20; j++) {
-                q_c = fGaussian(q_tt);
-                if(iksolver_.ikSolver(q_c, endPoses_desired_[simplified_points_[i]], q_t))
-                    random_confs.push_back(q_t);
-            }
-            for (uint j = 0; j < parameters_->quantum_tunnelling_iter_; j++) {
+            for (uint j = 0; j < parameters_->traj_generation_iter_; j++) {
                 if(iksolver_.ikSolverCollFree(endPoses_desired_[simplified_points_[i]], q_t)){
                     random_confs.push_back(q_t);
                 }

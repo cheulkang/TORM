@@ -36,15 +36,13 @@ void initParameters(torm::TormParameters &params_, int endPose_size){
     params_.pseudo_inverse_ridge_factor_ = 1e-4;
     params_.joint_update_limit_ = 0.1;
     params_.min_clearence_ = 0.3;
-    params_.collision_threshold_ = 0.07;
     params_.use_stochastic_descent_ = true;
     params_.use_velocity_check_ = true;
     params_.use_singularity_check_ = false;
 
     params_.singularity_lower_bound_ = 0.005; // fetch arm
-    params_.quantum_iter_ = 50;
-    params_.gaussian_weight_ = 0.02;
-    params_.quantum_tunnelling_iter_ = 100;
+    params_.exploration_iter_ = 50;
+    params_.traj_generation_iter_ = 100;
     params_.time_duration_ = 0.2;
 }
 
@@ -95,7 +93,7 @@ int main(int argc, char** argv) {
     std::vector<KDL::Frame> targetPoses = prob.getTargetPoses();
     std::vector<int> simplified_points;
 
-    int gap = 50;
+    int gap = 10;
     for(int i = gap; i < targetPoses.size(); i+=gap){
         simplified_points.push_back(i);
     }

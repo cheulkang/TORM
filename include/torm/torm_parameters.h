@@ -59,8 +59,6 @@ namespace torm
 
         double learning_rate_;
 
-        double gaussian_weight_;
-
         double smoothness_cost_velocity_;
         double smoothness_cost_acceleration_;
         double smoothness_cost_jerk_;
@@ -74,10 +72,9 @@ namespace torm
 
         double joint_update_limit_;
         double min_clearence_;
-        double collision_threshold_;
 
-        int quantum_iter_;
-        int quantum_tunnelling_iter_;
+        int exploration_iter_;
+        int traj_generation_iter_;
         double time_duration_;
         double singularity_lower_bound_;
     };

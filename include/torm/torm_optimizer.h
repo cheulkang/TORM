@@ -178,7 +178,6 @@ namespace torm
         bool start_flag_;
         collision_detection::AllowedCollisionMatrix acm_;
         std::vector<bool> joint_kinds_;
-        std::vector<double> variance_;
         std::default_random_engine generator_;
 
         inline bool isParent(const std::string& childLink, const std::string& parentLink) const
@@ -210,7 +209,6 @@ namespace torm
         void getNewTrajectory();
         double getEndPoseCost(bool grad);
         double getEndPoseCost(int start, int end);
-        KDL::JntArray fGaussian(KDL::JntArray q);
         void fillInLinearInterpolation(int s, int g);
         double getCollisionCost(int start, int end);
         void calculatePseudoInverse();

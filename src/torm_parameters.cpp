@@ -55,15 +55,13 @@ namespace torm
 
         joint_update_limit_ = 0.15;
         min_clearence_ = 0.2;
-        collision_threshold_ = 0.07;
         use_stochastic_descent_ = true;
         use_velocity_check_ = true;
         use_singularity_check_ = true;
         singularity_lower_bound_ = 0.015;
 
-        quantum_iter_ = 50;
-        gaussian_weight_ = 0.2;
-        quantum_tunnelling_iter_ = 15;
+        exploration_iter_ = 50;
+        traj_generation_iter_ = 15;
         time_duration_ = 0.2;
     }
 
