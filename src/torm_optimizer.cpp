@@ -797,11 +797,40 @@ namespace torm
 
                     for (size_t k = 0; k < info.sphere_locations.size(); k++)
                     {
+                        collision_point_pos_eigen_[i][j][0] = info.sphere_locations[k].x();
+                        collision_point_pos_eigen_[i][j][1] = info.sphere_locations[k].y();
+                        collision_point_pos_eigen_[i][j][2] = info.sphere_locations[k].z();
+
                         collision_point_potential_[i][j] = getPotential(info.distances[k], info.sphere_radii[k], parameters_->min_clearence_);
+
+                        collision_point_potential_gradient_[i][j][0] = info.gradients[k].x();
+                        collision_point_potential_gradient_[i][j][1] = info.gradients[k].y();
+                        collision_point_potential_gradient_[i][j][2] = info.gradients[k].z();
 
                         j++;
                     }
                 }
+            }
+        }
+        // now, get the vel and acc for each collision point (using finite differencing)
+        double inv_time = 1.0 / group_trajectory_.getDiscretization();
+        for (int i = start; i <= end; ++i)
+        {
+            for (int j = 0; j < num_collision_points_; j++)
+            {
+                collision_point_vel_eigen_[i][j] = Eigen::Vector3d(0, 0, 0);
+                for (int k = -DIFF_RULE_LENGTH / 2; k <= DIFF_RULE_LENGTH / 2; k++)
+                {
+                    int t = i + k;
+                    if(t > end){
+                        t = end;
+                    }
+                    collision_point_vel_eigen_[i][j] +=
+                            (inv_time * DIFF_RULES[0][k + DIFF_RULE_LENGTH / 2]) * collision_point_pos_eigen_[t][j];
+                }
+
+                // get the norm of the velocity:
+                collision_point_vel_mag_[i][j] = collision_point_vel_eigen_[i][j].norm();
             }
         }
     }
