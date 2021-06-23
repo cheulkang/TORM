@@ -34,6 +34,7 @@ namespace torm
         std::string getBaseLink();
         std::string getTipLink();
         std::vector<KDL::Frame> getTargetPoses();
+        std::vector<int> getSubSampledPoses();
         std::vector<std::string> getDefaultSettingJoints();
         std::vector<double> getDefaultSettingValues();
         std::vector<double> getStartConfiguration();
@@ -50,6 +51,7 @@ namespace torm
         std::vector<double>                                         default_setting_values_;
         std::vector<moveit_msgs::CollisionObject>                   collision_objects_;
         std::vector<KDL::Frame>                                     target_poses_;
+        std::vector<int>                                            sub_sampled_poses_;
 
         planning_scene::PlanningSceneConstPtr                       planning_scene_;
         moveit::planning_interface::PlanningSceneInterface          planning_scene_interface_;

@@ -3,8 +3,8 @@ planning_group: "arm"
 planning_base_link: "torso_lift_link"
 planning_tip_link: "gripper_link"
 scene_name: "rot_yz"
-start_config: [0.75435628406940525, 0.5875776197718009, 4.5653725089648711, 2.1997877289722894, 3.4548940938617987, 1.3296495814056504, -1.1181117201164357]
-#start_config: []
+#start_config: [0.75435628406940525, 0.5875776197718009, -1.717812798214715, 2.1997877289722894, -2.8282912133177875, 1.3296495814056504, -1.1181117201164357]
+start_config: []
 start_pose: [0.8, 0.0, 0.35, 0.0, 0.0, 0.0]
 obstacles: []
 default_setting_joints: []

@@ -63,6 +63,10 @@ namespace torm
         exploration_iter_ = 50;
         traj_generation_iter_ = 15;
         time_duration_ = 0.2;
+
+        stop_local_minima_ = 1e-6;
+        stop_increasing_ = 1e-1;
+        stop_non_feasibility_ = 1e-3;
     }
 
     TormParameters::~TormParameters(){

@@ -70,7 +70,9 @@ namespace torm
 
         virtual ~TormOptimizer();
 
+        bool localOptimizeTSGDforAdaptive(int maxiter);
         bool localOptimizeTSGD(int maxiter);
+        bool adaptiveExploration();
         bool iterativeExploration();
         bool checkJointVelocityLimit();
         bool checkSingularity();
@@ -124,6 +126,9 @@ namespace torm
         ros::WallTime start_time_;
         int start_collision_;
         int end_collision_;
+        int worst_collision_cost_state_;
+        bool check_collision_;
+        bool check_vel_limits_;
 
         TormTrajectory* full_trajectory_;
         const moveit::core::RobotModelConstPtr& kmodel_;
@@ -211,6 +216,7 @@ namespace torm
         double getEndPoseCost(int start, int end);
         void fillInLinearInterpolation(int s, int g);
         double getCollisionCost(int start, int end);
+        double getCollisionCostWithWorst(int start, int end);
         void calculatePseudoInverse();
         void computeJointProperties(int trajectoryPoint);
         bool isCurrentTrajectoryCollisionFree() const;

@@ -22,6 +22,10 @@
 #include <eigen_conversions/eigen_kdl.h>
 
 void initParameters(torm::TormParameters &params_, int endPose_size){
+    /*
+     * These parameters can be edited according to the robot and other factors.
+     * Also, these were set with a focus on the arm of the Fetch.
+     * */
     params_.planning_time_limit_ = 50.0;
     params_.smoothness_cost_weight_ = 15.0/endPose_size;
     params_.endPose_cost_weight_ = 10.0;
@@ -40,10 +44,14 @@ void initParameters(torm::TormParameters &params_, int endPose_size){
     params_.use_velocity_check_ = true;
     params_.use_singularity_check_ = false;
 
-    params_.singularity_lower_bound_ = 0.005; // fetch arm
-    params_.exploration_iter_ = 50;
+    params_.singularity_lower_bound_ = 0.005;
+    params_.exploration_iter_ = 300; // This parameter is a fallback for the case where the exploration is not end.
     params_.traj_generation_iter_ = 100;
     params_.time_duration_ = 0.2;
+
+    params_.stop_local_minima_ = 1e-6;
+    params_.stop_increasing_ = 1e-1;
+    params_.stop_non_feasibility_ = 1e-3;
 }
 
 int main(int argc, char** argv) {
@@ -91,15 +99,16 @@ int main(int argc, char** argv) {
     torm::TormDebug debug(planning_scene, prob.getFixedFrame());
 
     std::vector<KDL::Frame> targetPoses = prob.getTargetPoses();
-    std::vector<int> simplified_points;
+    std::vector<int> subSampledPoses = prob.getSubSampledPoses();
 
-    int gap = 10;
-    for(int i = gap; i < targetPoses.size(); i+=gap){
-        simplified_points.push_back(i);
-    }
-    if(simplified_points[simplified_points.size()-1] != targetPoses.size()-1){
-        simplified_points.push_back(targetPoses.size()-1);
-    }
+//    subSampledPoses.clear();
+//    int gap = 10;
+//    for(int i = gap; i < targetPoses.size(); i+=gap){
+//        subSampledPoses.push_back(i);
+//    }
+//    if(subSampledPoses[subSampledPoses.size()-1] != targetPoses.size()-1){
+//        subSampledPoses.push_back(targetPoses.size()-1);
+//    }
 
     torm::TormParameters params;
     initParameters(params, targetPoses.size());
@@ -148,9 +157,10 @@ int main(int argc, char** argv) {
 
     // trajectory optimization
     torm::TormOptimizer opt(&trajectory, planning_scene, PLANNING_GROUP, &params, state,
-                            targetPoses, simplified_points, iksolver, start_flag, joint_bounds);
+                            targetPoses, subSampledPoses, iksolver, start_flag, joint_bounds);
 
-    bool result = opt.iterativeExploration();
+//    bool result = opt.iterativeExploration();
+    bool result = opt.adaptiveExploration();
 
     if(!result) {
         ROS_INFO("No found a valid trajectory.");

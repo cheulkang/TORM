@@ -1,0 +1,11 @@
+fixed_frame: "/base_link"
+planning_group: "arm"
+planning_base_link: "torso_lift_link"
+planning_tip_link: "gripper_link"
+scene_name: "s_two"
+start_config: [0.28039550540608815, -0.78359124875911979, 0.66780475781307547, 1.2829044486909587, 0.85866799994181009, -1.000833960705479, -1.1642709468037553]
+start_pose: [0.95, 0.35, 0.55, 0.0, 0.0, 0.0]
+obstacles: [[x: 0.525, y: 0.18, z: 0.82, roll: 0.0, pitch: 0.0, yaw: 0.0, size_x: 0.3, size_y: 0.055, size_z: 0.15],
+            [x: 0.525, y: -0.18, z: 0.65, roll: 0.0, pitch: 0.0, yaw: 0.0, size_x: 0.3, size_y: 0.055, size_z: 0.15]]
+default_setting_joints: ["torso_lift_joint"]
+default_setting_values: [0.0]

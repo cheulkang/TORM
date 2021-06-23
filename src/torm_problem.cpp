@@ -35,8 +35,8 @@ namespace torm {
             std::string obs_name = "obs" + std::to_string(i);
 
             collision_objects_.push_back(makeCollisionObject(obs_name, double(obs[i][0]["x"]), double(obs[i][1]["y"]), double(obs[i][2]["z"]),
-                                double(obs[i][3]["roll"]), double(obs[i][4]["pitch"]), double(obs[i][5]["yaw"]),
-                                double(obs[i][6]["size_x"]), double(obs[i][7]["size_y"]), double(obs[i][8]["size_z"])));
+                                                             double(obs[i][3]["roll"]), double(obs[i][4]["pitch"]), double(obs[i][5]["yaw"]),
+                                                             double(obs[i][6]["size_x"]), double(obs[i][7]["size_y"]), double(obs[i][8]["size_z"])));
         }
 
     }
@@ -93,10 +93,14 @@ namespace torm {
         while(std::getline(inFile, str, '\n')){
             std::vector<std::string> tokens;
             tokens = split(str, ';');
+            if(tokens[0] == "1.00"){
+                if(input_poss.size() != 0)
+                    sub_sampled_poses_.push_back(input_poss.size());
+            }
             std::vector<double> tt;
             std::vector<double> tr;
-            tt = split_f(tokens[0], ',');
-            tr = split_f(tokens[1], ',');
+            tt = split_f(tokens[1], ',');
+            tr = split_f(tokens[2], ',');
             input_poss.push_back(tt);
             input_rots.push_back(tr);
         }
@@ -120,7 +124,10 @@ namespace torm {
             double roll, pitch, yaw;
             m.getRPY(roll, pitch, yaw);
 
-            p.M = p.M.RPY(roll, pitch, yaw);
+            p.M.DoRotX(roll);
+            p.M.DoRotY(pitch);
+            p.M.DoRotZ(yaw);
+//            p.M = p.M.RPY(roll, pitch, yaw);
 
             target_poses_.push_back(p);
         }
@@ -148,6 +155,10 @@ namespace torm {
 
     std::vector<KDL::Frame> TormProblem::getTargetPoses(){
         return target_poses_;
+    }
+
+    std::vector<int> TormProblem::getSubSampledPoses(){
+        return sub_sampled_poses_;
     }
 
     std::vector<std::string> TormProblem::getDefaultSettingJoints(){

@@ -288,6 +288,7 @@ namespace torm
             }
         }
 
+        check_collision_ = true;
         int start = free_vars_start_;
         int end = free_vars_end_;
         for (int i = start; i <= end; ++i)
@@ -357,6 +358,97 @@ namespace torm
         }
     }
 
+    bool TormOptimizer::localOptimizeTSGDforAdaptive(int maxiter){
+        bool optimization_result = false;
+        double eCost;
+        std::vector<double> q_eCost;
+        int m = 5;
+        int fea_check = 0;
+        for (int iter = 0; iter < maxiter; iter++) {
+            for (int stage = 0; stage < 2; stage++){
+                if(stage == 0){
+                    performForwardKinematics();
+                    getCollisionCostWithWorst(free_vars_start_, free_vars_end_);
+                    eCost = getEndPoseCost(false);
+
+                    q_eCost.push_back(eCost/value_for_endPoses_costs_);
+                    if(q_eCost.size() >= m+1)
+                        q_eCost.erase(q_eCost.begin());
+
+                    local_group_trajectory_ = group_trajectory_.getTrajectory();
+                    check_collision_ = true;
+                    bool feasible;
+                    if(!checkJointVelocityLimit()){
+                        feasible = false;
+                        fea_check++;
+                    }
+                    else if(isCurrentTrajectoryCollisionFree()){
+                        check_collision_ = false;
+                        feasible = false;
+                        fea_check++;
+                    }
+                    else{
+                        feasible = true;
+                        fea_check = 0;
+                    }
+
+                    double sum_of_eCost = 0.0;
+                    if(iter > m) {
+                        for (int k = 1; k <= m; k++) {
+                            sum_of_eCost += (q_eCost[m] - q_eCost[m - k]) / k;
+                        }
+                        sum_of_eCost /= m;
+                    }
+                    if(iter > m){
+                        if(std::abs(sum_of_eCost) < parameters_->stop_local_minima_){
+                            return false;
+                        }
+                        else if(sum_of_eCost > parameters_->stop_increasing_){
+                            return false;
+                        }
+                        else if(std::abs(sum_of_eCost) < parameters_->stop_non_feasibility_ && fea_check >= m){
+                            return false;
+                        }
+                    }
+                    if(best_trajectory_backup_cost_ > eCost){
+                        local_group_trajectory_ = group_trajectory_.getTrajectory();
+                        if(feasible && checkSingularity()){
+                            optimization_result = true;
+                            best_trajectory_backup_cost_ = eCost;
+                            best_trajectory_ = group_trajectory_.getTrajectory();
+                            std::cout << eCost/value_for_endPoses_costs_ << " " << (ros::WallTime::now() - start_time_).toSec() << std::endl;
+                        }
+                    }
+
+                    calculateSmoothnessIncrements();
+                    calculateCollisionIncrements();
+                    calculateFeasibleIncrements();
+                }
+                else{
+                    eCost = getEndPoseCost(true);
+                    if(best_trajectory_backup_cost_ > eCost){
+                        local_group_trajectory_ = group_trajectory_.getTrajectory();
+                        if(!isCurrentTrajectoryCollisionFree() && checkJointVelocityLimit() && checkSingularity()){
+                            optimization_result = true;
+                            best_trajectory_backup_cost_ = eCost;
+                            best_trajectory_ = group_trajectory_.getTrajectory();
+                            std::cout << eCost/value_for_endPoses_costs_ << " " << (ros::WallTime::now() - start_time_).toSec() << std::endl;
+                        }
+                    }
+                    calculateEndPoseIncrements();
+                }
+
+                addIncrementsToTrajectory();
+                handleJointLimits();
+                updateGoalConfiguration();
+
+                updateFullTrajectory();
+            }
+        }
+
+        return optimization_result;
+    }
+
     bool TormOptimizer::localOptimizeTSGD(int maxiter){
         bool optimization_result = false;
         double eCost;
@@ -398,6 +490,34 @@ namespace torm
         }
 
         return optimization_result;
+    }
+
+    bool TormOptimizer::adaptiveExploration(){
+        iteration_ = 0;
+        best_trajectory_backup_cost_ = DBL_MAX;
+
+        start_time_ = ros::WallTime::now();
+        performForwardKinematics();
+        iteration_++;
+
+        double min_v = parameters_->obstacle_cost_weight_-1.0;
+        double max_v = parameters_->obstacle_cost_weight_+1.0;
+        while((ros::WallTime::now() - start_time_).toSec() < parameters_->planning_time_limit_){
+            double f = (double)rand() / RAND_MAX;
+            parameters_->obstacle_cost_weight_ = min_v + f * (max_v - min_v);
+            getNewTrajectory();
+            localOptimizeTSGDforAdaptive(parameters_->exploration_iter_);
+        }
+
+        group_trajectory_.getTrajectory() = best_trajectory_;
+        updateFullTrajectory();
+
+        if(best_trajectory_backup_cost_ != DBL_MAX){
+            return true;
+        }
+        else{
+            return false;
+        }
     }
 
     bool TormOptimizer::iterativeExploration(){
@@ -553,7 +673,7 @@ namespace torm
             q_c.data = group_trajectory_.getTrajectoryPoint(start_point);
             KDL::JntArray q_tt;
             q_tt = q_c;
-            double bestCost = 10000000000.0;
+            double bestCost = DBL_MAX;
             std::vector<KDL::JntArray> random_confs;
 
             for (uint j = 0; j < parameters_->traj_generation_iter_; j++) {
@@ -996,6 +1116,31 @@ namespace torm
         return parameters_->obstacle_cost_weight_ * collision_cost;
     }
 
+    double TormOptimizer::getCollisionCostWithWorst(int start, int end)
+    {
+        double collision_cost = 0.0;
+
+        double worst_collision_cost = 0.0;
+        worst_collision_cost_state_ = -1;
+        for (int i = start; i <= end; i++)
+        {
+            double state_collision_cost = 0.0;
+            for (int j = 0; j < num_collision_points_; j++)
+            {
+                state_collision_cost += collision_point_potential_[i][j] * collision_point_vel_mag_[i][j];
+            }
+            if (state_collision_cost > worst_collision_cost)
+            {
+                worst_collision_cost = state_collision_cost;
+                worst_collision_cost_state_ = i;
+            }
+
+            collision_cost += state_collision_cost;
+        }
+
+        return parameters_->obstacle_cost_weight_ * collision_cost;
+    }
+
     void TormOptimizer::calculateSmoothnessIncrements()
     {
         for (int i = 0; i < num_joints_; i++)
@@ -1030,11 +1175,18 @@ namespace torm
         // In stochastic descent, simply use a random point in the trajectory, rather than all the trajectory points.
         // This is faster and guaranteed to converge, but it may take more iterations in the worst case.
         if (parameters_->use_stochastic_descent_) {
-            startPoint = (int)(((double)random() / (double)RAND_MAX) * (free_vars_end_ - free_vars_start_) + free_vars_start_);
+            if(!check_collision_){
+                startPoint = worst_collision_cost_state_;
+            }
+            else{
+                startPoint = (int)(((double)random() / (double)RAND_MAX) * (free_vars_end_ - free_vars_start_) + free_vars_start_);
+            }
+
             if (startPoint < free_vars_start_)
                 startPoint = free_vars_start_;
             if (startPoint > free_vars_end_)
                 startPoint = free_vars_end_;
+
             endPoint = startPoint;
         }
         else {

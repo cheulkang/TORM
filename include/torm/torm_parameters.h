@@ -77,6 +77,10 @@ namespace torm
         int traj_generation_iter_;
         double time_duration_;
         double singularity_lower_bound_;
+
+        double stop_local_minima_;
+        double stop_increasing_;
+        double stop_non_feasibility_;
     };
 
 }  // namespace tomp
