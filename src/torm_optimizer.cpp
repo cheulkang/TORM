@@ -1056,9 +1056,10 @@ namespace torm
             q.data = xi.row(i);
             iksolver_.fkSolver(q, endPoses_c);
             delta_twist = diff(endPoses_c, endPoses_desired_[i-vv]);
-            iksolver_.vikSolver(q, delta_twist, delta_q);
-            if(grad)
+            if(grad){
+                iksolver_.vikSolver(q, delta_twist, delta_q);
                 endPose_increments_.row(i-free_vars_start_) = delta_q.data;
+            }
             double dd = KDL::dot(delta_twist.vel, delta_twist.vel) +
                         KDL::dot(delta_twist.rot, delta_twist.rot);
             endPose_cost += dd;
@@ -1067,7 +1068,6 @@ namespace torm
             q_t.data = (pre_q.data + q.data) / 2;
             iksolver_.fkSolver(q_t, endPoses_c);
             delta_twist = diff(endPoses_c, endPoses_desired_intervals_[i-free_vars_start_]);
-            iksolver_.vikSolver(q_t, delta_twist, delta_q);
             dd = KDL::dot(delta_twist.vel, delta_twist.vel) +
                  KDL::dot(delta_twist.rot, delta_twist.rot);
             endPose_cost += dd;
