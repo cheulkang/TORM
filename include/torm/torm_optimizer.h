@@ -42,10 +42,10 @@
 #include <torm/torm_cost.h>
 #include <torm/torm_ik_solver.h>
 #include <torm/torm_debug.h>
+
 #include <moveit/robot_model/robot_model.h>
 #include <moveit/planning_scene/planning_scene.h>
-#include <moveit/collision_distance_field/collision_robot_hybrid.h>
-#include <moveit/collision_distance_field/collision_world_hybrid.h>
+#include <moveit/collision_distance_field/collision_env_hybrid.h>
 
 #include <Eigen/Core>
 #include <Eigen/StdVector>
@@ -80,8 +80,7 @@ namespace torm
         inline void destroy()
         {
             // Nothing for now.
-            delete hy_world_;
-            delete hy_robot_;
+            delete hy_env_;
         }
 
         void updateStartConfiguration();
@@ -138,9 +137,9 @@ namespace torm
         planning_scene::PlanningSceneConstPtr planning_scene_;
         moveit::core::RobotState state_;
         const moveit::core::JointModelGroup* joint_model_group_;
-        collision_detection::CollisionWorldHybrid* hy_world_;
-        collision_detection::CollisionRobotHybrid* hy_robot_;
 
+        collision_detection::CollisionEnvHybrid* hy_env_;
+        
         std::vector<TormCost> joint_costs_;
         collision_detection::GroupStateRepresentationPtr gsr_;
 

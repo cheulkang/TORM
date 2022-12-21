@@ -68,24 +68,16 @@ namespace torm
         double size_x = 2.5, size_y = 2.5, size_z = 5.0;
         double resolution = 0.01;
         const collision_detection::WorldPtr& w = (const collision_detection::WorldPtr &) planning_scene->getWorld();
-        hy_world_ = new collision_detection::CollisionWorldHybrid(w, Eigen::Vector3d(size_x, size_y, size_z),
+
+        std::map<std::string, std::vector<collision_detection::CollisionSphere>> link_body_decompositions;
+        hy_env_ = new collision_detection::CollisionEnvHybrid(kmodel_, w, link_body_decompositions, size_x, size_y, size_z,
                                                                   Eigen::Vector3d(0.0, 0.0, 0.0),
                                                                   false,
                                                                   resolution, 0.0, 0.3);
-        if (!hy_world_)
+        
+        if (!hy_env_)
         {
             ROS_WARN_STREAM("Could not initialize hybrid collision world from planning scene");
-            return;
-        }
-
-        std::map<std::string, std::vector<collision_detection::CollisionSphere>> link_body_decompositions;
-        hy_robot_ = new collision_detection::CollisionRobotHybrid(kmodel_, link_body_decompositions,
-                                                                  size_x, size_y, size_z,
-                                                                  false,
-                                                                  resolution, 0.0, 0.3);
-        if (!hy_robot_)
-        {
-            ROS_WARN_STREAM("Could not initialize hybrid collision robot from planning scene");
             return;
         }
 
@@ -172,9 +164,7 @@ namespace torm
         ros::WallTime wt = ros::WallTime::now();
         collision_detection::AllowedCollisionMatrix acm_ = planning_scene_->getAllowedCollisionMatrix();
 
-        hy_world_->getCollisionGradients(req, res, *hy_robot_->getCollisionRobotDistanceField().get(), state_,
-                                         &acm_, gsr_);
-
+        hy_env_->getCollisionGradients(req, res, state_, &acm_, gsr_);
         ROS_INFO_STREAM("First coll check took " << (ros::WallTime::now() - wt));
         num_collision_points_ = 0;
         start_collision_ = 0;
@@ -905,7 +895,7 @@ namespace torm
             req.group_name = planning_group_;
             setRobotStateFromPoint(group_trajectory_, i);
 
-            hy_world_->getCollisionGradients(req, res, *hy_robot_->getCollisionRobotDistanceField().get(), state_, &acm_, gsr_);
+            hy_env_->getCollisionGradients(req, res, state_, nullptr, gsr_);
             computeJointProperties(i);
 
             // Keep vars in scope
@@ -976,7 +966,7 @@ namespace torm
             req.group_name = planning_group_;
             setRobotStateFromPoint(group_trajectory_, i);
 
-            hy_world_->getCollisionGradients(req, res, *hy_robot_->getCollisionRobotDistanceField().get(), state_, &acm_, gsr_);
+            hy_env_->getCollisionGradients(req, res, state_, nullptr, gsr_);
             computeJointProperties(i);
 
             // Keep vars in scope
