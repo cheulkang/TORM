@@ -2,6 +2,7 @@
 
 You can see information about this code through this webpage. (We uploaded our paper and video.) </br>
 https://sglab.kaist.ac.kr/TORM/</br>
+https://sglab.kaist.ac.kr/TORM-auro/</br>
 
 1. Install the dependencies.
 
