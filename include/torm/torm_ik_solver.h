@@ -21,6 +21,7 @@ namespace torm
         void getRandomConfiguration(KDL::JntArray& q);
         void setCollisionChecker();
         bool collisionChecking(std::vector<double> values);
+        bool selfCollisionChecking(std::vector<double> values);
 
         bool ikSolver(const KDL::JntArray& q_init, const KDL::Frame& p_in, KDL::JntArray& q_out);
         bool ikSolver(const KDL::Frame& p_in, KDL::JntArray& q_out);

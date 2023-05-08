@@ -50,6 +50,15 @@ namespace torm
 
         return !collision_result_.collision;
     }
+	
+    bool TormIKSolver::selfCollisionChecking(std::vector<double> values) {
+        collision_result_.clear();
+        robot_state::RobotState state = planning_scene_->getCurrentState();
+        state.setJointGroupPositions(planning_group_, values);
+        planning_scene_->checkSelfCollision(collision_request_, collision_result_, state);
+
+        return !collision_result_.collision;
+    }
 
     double TormIKSolver::fRand(double min, double max) const {
         double f = (double)rand() / RAND_MAX;
